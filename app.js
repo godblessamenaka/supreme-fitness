@@ -1,57 +1,30 @@
-var express = require('express');
-var volleyball = require('volleyball');
-var bodyParser = require('body-parser');
-var nunjucks = require('nunjucks');
-
-var db = require('./models');
-
+var express = require("express");
 var app = express();
+var router = express.Router();
+var path = __dirname + '/views/';
 
-// nunjucks rendering boilerplate
-nunjucks.configure('views', { noCache: true });
-app.set('view engine', 'html');
-app.engine('html', nunjucks.render);
-
-// logging and body-parsing
-app.use(volleyball);
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-// statically serve front-end dependencies
-app.use('/bootstrap', express.static(__dirname + '/node_modules/bootstrap/dist'));
-app.use('/jquery', express.static(__dirname + '/node_modules/jquery/dist'));
-
-// serve any other static files
-app.use(express.static(__dirname + '/public'));
-
-// serve dynamic routes
-app.use(require('./routes'));
-
-// failed to catch req above means 404, forward to error handler
-app.use(function (req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+router.use(function (req,res,next) {
+  next();
 });
 
-// handle any errors
-app.use(function (err, req, res, next) {
-  console.error(err, err.stack);
-  res.status(err.status || 500);
-  res.render('error', {
-    error: err
-  });
+router.get("/",function(req,res){
+  res.sendFile(path + "index.html");
 });
 
-// listen on a port
-var port = 3000;
-app.listen(port, function () {
-  console.log('The server is listening closely on port', port);
-  db.sync()
-  .then(function () {
-    console.log('Synchronated the database');
-  })
-  .catch(function (err) {
-    console.error('Trouble right here in River City', err, err.stack);
-  });
+router.get("/about",function(req,res){
+  res.sendFile(path + "about.html");
+});
+
+router.get("/contact",function(req,res){
+  res.sendFile(path + "contact.html");
+});
+
+app.use("/",router);
+
+app.use("*",function(req,res){
+  res.sendFile(path + "error.html");
+});
+
+app.listen(3000,function(){
+  console.log("Live at Port 3000");
 });
